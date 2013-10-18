@@ -26,7 +26,9 @@ typedef unsigned int t_puerto; /* TODO: mover esto a common */
 #endif
 
 #define PUERTO_NO_ABIERTO -1
+#define SOCKET_NO_ABIERTO -1
 #define MENSAJE_CONFIRMACION 'OK'
+
 
 
 #endif // GENERAL_H_INCLUDED

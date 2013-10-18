@@ -2,10 +2,54 @@
 #include <string>
 
 Socket::Socket(){
-    this->socketfd=PUERTO_NO_ABIERTO;
+    setSocket(SOCKET_NO_ABIERTO);
+    setPuerto(PUERTO_NO_ABIERTO);
+    setDireccion("");
+    host_info_list= NULL;
+    memset(&host_info, 0, sizeof host_info); // Necesario
 }
 
 Socket::~Socket(){
+    freeaddrinfo(host_info_list);
+}
+
+
+int Socket::setAddrInfo(){
+    int status;
+    char* address=NULL;
+    std::stringstream puerto_str;
+    puerto_str << puerto;
+    int error=0;
+    host_info.ai_family = AF_UNSPEC;
+    host_info.ai_socktype = SOCK_STREAM;
+    if (direccion!="")
+        address= (char*)direccion.c_str();
+    else
+        host_info.ai_flags = AI_PASSIVE;
+
+    status = getaddrinfo(address, puerto_str.str().c_str(),\
+                         &host_info, &host_info_list);
+
+    if (status != 0) {
+        DEBUG_MSG("Error en getaddrinfo.");
+        error= 1;
+    }
+return error;
+}
+
+// -1 si hubo error o el socket
+int Socket::getSocketDescriptor(){
+        int socketd=0;
+        if (host_info_list!=NULL){ // Si fueron seteados las estructuras
+            socketd = socket(host_info_list->ai_family,   \
+                                           host_info_list->ai_socktype, \
+                                           host_info_list->ai_protocol);
+            if (socketd == -1){
+                DEBUG_MSG("Error en socket.");
+                return -1;
+            }
+        }
+return socketd;
 }
 
 int Socket::enviar(char* mensaje, uint32_t tamanio){
@@ -24,24 +68,22 @@ int Socket::enviar(char* mensaje, uint32_t tamanio){
 return 0;
 }
 
+// cant. recibida o -1 en caso de error
 int Socket::recibir(char** buffer_entrada){
     ssize_t bytes_recibidos;
-    int error;
+    int error=-1;
     *buffer_entrada= new char[TAMANIO_PAQUETE];
 
     bytes_recibidos = recv(this->getSocket(), \
             *buffer_entrada,TAMANIO_PAQUETE, 0);
     if (bytes_recibidos == 0) {
       DEBUG_MSG("Servidor apagado.");
-     error= 0;
+    //  error= 0;
     } else {
       if (bytes_recibidos == -1){
         DEBUG_MSG("Error de recepcion.");
-        error=-1;
       } else {
-        if (bytes_recibidos != TAMANIO_PAQUETE)
-            error=-2;
-        else
+        if (bytes_recibidos == TAMANIO_PAQUETE)
             error=TAMANIO_PAQUETE;
       }
     }

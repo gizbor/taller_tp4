@@ -12,7 +12,8 @@ class ServerSocket: public Socket
         ServerSocket();
         explicit ServerSocket(t_puerto puerto) { setPuerto(puerto); }
         virtual ~ServerSocket();
-        int abrir(t_puerto puerto);
+        /////////int abrir(t_puerto puerto);
+        int conectar();
 
         int getSocketPuerto() { return this->socket_puerto; }
         void setSocketPuerto(int socket) { this->socket_puerto=socket; }

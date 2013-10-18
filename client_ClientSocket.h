@@ -11,7 +11,6 @@ class ClientSocket: public Socket
       virtual ~ClientSocket();
       //void setPuerto(t_puerto puerto=-1) { this->puerto= puerto; }
       //t_puerto getPuerto() { return this->puerto; }
-      void setDireccion(std::string direccion) { this->direccion = direccion; }
       //int recibir(char** buffer);
       //int enviar(char* mensaje, uint32_t tamanio);
       int conectar();
@@ -21,8 +20,6 @@ class ClientSocket: public Socket
   protected:
      // int getSocket() { return this->socketd; }
   private:
-
-      std::string direccion;
 
 };
 

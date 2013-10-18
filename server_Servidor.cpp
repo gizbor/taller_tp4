@@ -16,7 +16,8 @@ int Servidor::abrir(t_puerto puerto){
     std::stringstream mensaje;
 
     ServerSocket* socket=new ServerSocket();
-    if (socket->abrir(puerto)==0){
+    socket->setPuerto(puerto);
+    if (socket->conectar()==0){
         puertos.push_back(socket);
         mensaje << "PUERTO " << puerto << ". Abierto.";
         Servidor::loguear(mensaje.str());
@@ -29,7 +30,6 @@ int Servidor::abrir(t_puerto puerto){
     }
 return 0;
 }
-
 
 bool Servidor::estaAbierto(t_puerto puerto){
 return this->getSocket(puerto)!=NULL;
