@@ -60,65 +60,87 @@ void Servidor::cerrar(){
         puertos[i]->cerrar();
 }
 
-/* PRE: puerto abierto */
-void* Servidor::aceptar(void* po_socket){
- std::stringstream mensaje_log, mensaje_confirmacion;
- ServerSocket* posocket=reinterpret_cast<ServerSocket*>(po_socket);
- int bytes_datos_recibidos;
- char *buffer_entrada=NULL, *mensaje_cliente=NULL, *confirmacion_serial=NULL;
- bool shutdown=false;
- uint32_t tamanio, tamanio_confirmacion;
- int error=0;
- std::string mensaje;
-
- while (!shutdown){
-  if (posocket->aceptar()==0){
-      mensaje_log.str("");
-      mensaje_log << "PUERTO " << posocket->getPuerto() << \
-                   ". Conexión aceptada.";
-      Servidor::loguear(mensaje_log.str());
-      /* Enviar confirmacion al cliente */
+int Servidor::confirmarConexion(ServerSocket& socket){
+      std::stringstream mensaje_confirmacion;
+      int error=-1;
+      uint32_t tamanio_confirmacion;
+      char *confirmacion_serial=NULL;
       mensaje_confirmacion.str("");
-      mensaje_confirmacion << "PUERTO " << posocket->getPuerto() \
+      mensaje_confirmacion << "PUERTO " << socket.getPuerto() \
                            << " Aceptado. Recibiendo datos...";
       tamanio_confirmacion=protocolo.serializarMsg(mensaje_confirmacion.str().c_str(),\
                    mensaje_confirmacion.str().length(),&confirmacion_serial);
-      posocket->enviar(confirmacion_serial,tamanio_confirmacion);
+      error=socket.enviar(confirmacion_serial,tamanio_confirmacion);
       delete[] confirmacion_serial;
+return error;
+}
 
-      if (error!=0 ||
-           (bytes_datos_recibidos=posocket->recibir(&buffer_entrada))<=0){
-       DEBUG_MSG("Error recibiendo mensaje del cliente.");
-      } else {
-       tamanio= protocolo.deserializarMsg(buffer_entrada, &mensaje_cliente);
-       if (MODO_DEBUG==1){
-           msgAString(mensaje_cliente,tamanio,mensaje);
-           Servidor::loguear(mensaje);
+// -1: error, bytes recibidos
+int Servidor::recibirArchivo(ServerSocket& socket, char** buffer_entrada){
+    int tamanio=-1;
+    char *mensaje_cliente=NULL;
+    std::string mensaje;
+              if (socket.recibir(buffer_entrada)<=0){
+                    DEBUG_MSG("Error recibiendo archivo del cliente.");
+              } else {
+               tamanio= protocolo.deserializarMsg(*buffer_entrada, &mensaje_cliente);
+               if (MODO_DEBUG==1){
+                   msgAString(mensaje_cliente,tamanio,mensaje);
+                   Servidor::loguear(mensaje);
+               }
+               delete[] mensaje_cliente;
+              }
+return tamanio;
+}
+int Servidor::enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio){
+   std::stringstream mensaje_confirmacion;
+   char *confirmacion_serial=NULL;
+   uint32_t tamanio_confirmacion;
+   int error=-1;
+   mensaje_confirmacion.str("");
+   mensaje_confirmacion \
+      << "Datos recibidos exitosamente. Cantidad de bytes recibidos: " \
+      << tamanio << ".";
+     tamanio_confirmacion=protocolo.serializarMsg(\
+                                            mensaje_confirmacion.str().c_str(), \
+                                            mensaje_confirmacion.str().length(),\
+                                            &confirmacion_serial);
+     error=socket.enviar(confirmacion_serial,tamanio_confirmacion);
+     delete[] confirmacion_serial;
+return error;
+}
+/* PRE: puerto abierto */
+void* Servidor::aceptar(void* po_socket){
+ std::stringstream mensaje_log;
+ ServerSocket* posocket=reinterpret_cast<ServerSocket*>(po_socket);
+ char *buffer_entrada=NULL;
+ bool shutdown=false;
+ uint32_t tamanio;
+ std::string mensaje;
+
+ while (!shutdown){
+      if (posocket->aceptar()==0){
+          mensaje_log.str("");
+          mensaje_log << "PUERTO " << posocket->getPuerto() << \
+                       ". Conexión aceptada.";
+          Servidor::loguear(mensaje_log.str());
+          if (Servidor::confirmarConexion(*posocket)!=0){
+            if ((tamanio=Servidor::recibirArchivo(*posocket, &buffer_entrada))!=-1){
+                   mensaje_log.str("");
+                   mensaje_log << "PUERTO "    << posocket->getPuerto() \
+                                       << ". Recibidos " << tamanio << " bytes.";
+                   Servidor::loguear(mensaje_log.str());
+                   Servidor::enviarConfirmacionArchivo(*posocket, tamanio);
+                   delete[] buffer_entrada;
+            }
+             mensaje_log.str("");
+             mensaje_log << "PUERTO " << posocket->getPuerto() << ". Conexión cerrada.";
+             Servidor::loguear(mensaje_log.str());
+          }
+        posocket->cancelar();
+       } else {
+           shutdown = true;
        }
-       delete[] mensaje_cliente;
-       mensaje_log.str("");
-       mensaje_log << "PUERTO " << posocket->getPuerto() << ". Recibidos "\
-                   << tamanio << " bytes.";
-       Servidor::loguear(mensaje_log.str());
-       /* Envia confirmacion... */
-       mensaje_confirmacion.str("");
-       mensaje_confirmacion \
-       << "Datos recibidos exitosamente. Cantidad de bytes recibidos: " \
-       << tamanio << ".";
-       tamanio_confirmacion=protocolo.serializarMsg(mensaje_confirmacion.str().c_str(), \
-                                          mensaje_confirmacion.str().length(),\
-                                          &confirmacion_serial);
-       posocket->enviar(confirmacion_serial,tamanio_confirmacion);
-       delete[] confirmacion_serial;
-       delete[] buffer_entrada;
-      }
-    mensaje_log.str("");
-    mensaje_log << "PUERTO " << posocket->getPuerto() << ". Conexión cerrada.";
-    Servidor::loguear(mensaje_log.str());
-    posocket->cancelar();
-   } else {
-       shutdown = true;
-   }
   }
 pthread_exit(NULL);
 }

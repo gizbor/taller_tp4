@@ -62,7 +62,7 @@ int Socket::enviar(char* mensaje, uint32_t tamanio){
 
         bytes_enviados = send(this->getSocket(), paquete, TAMANIO_PAQUETE, 0);
         if (bytes_enviados!=-1)
-            return error=0;
+            return error=bytes_enviados;
     }
 return error;
 }

@@ -5,7 +5,7 @@
 #include <map>
 #include "server_ServerSocket.h"
 #include "common_funciones.h"
-#include "Protocolo.h"
+#include "common_Protocolo.h"
 #include <string>
 
 class Servidor {
@@ -22,6 +22,11 @@ class Servidor {
         pthread_t escuchar(t_puerto puerto);
         bool estaAbierto(t_puerto puerto);
         pthread_t apagador();
+
+        static int enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio);
+        static int confirmarConexion(ServerSocket& socket);
+        static int recibirArchivo(ServerSocket& socket, char** buffer_entrada);
+
     protected:
     private:
         ServerSocket* getSocket(t_puerto puerto);
