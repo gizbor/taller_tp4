@@ -27,6 +27,9 @@ class Servidor {
         static int confirmarConexion(ServerSocket& socket);
         static int recibirArchivo(ServerSocket& socket, char** buffer_entrada);
 
+
+        int iniciar(std::string puertos);
+
     protected:
     private:
         ServerSocket* getSocket(t_puerto puerto);
@@ -35,6 +38,7 @@ class Servidor {
         static void loguear(const std::string& mensaje);
         static void* salir(void*arg);
         static void apagar(std::vector<ServerSocket*> &puertos);
+        void parsearPuertos(const char* puertos, std::vector<t_puerto> &vpuertos);
         static Protocolo protocolo;
 };
 
