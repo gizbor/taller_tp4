@@ -38,24 +38,4 @@ class Socket
 
 };
 
-//        SERVER
-//        int abrir(t_puerto puerto);
-//
-//        int aceptar();
-//        void cancelar();
-
-//    protected:
-//    private:
-//        int socket_aceptado;
-
-
-//  CLIENTE
-//      void setDireccion(std::string direccion) { this->direccion = direccion; }
-//      int conectar();
-//      void desconectar();
-//
-//  protected:
-//  private:
-//      std::string direccion;
-
 #endif // COMMON_SOCKET_H_INCLUDED

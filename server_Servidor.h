@@ -5,6 +5,7 @@
 #include <map>
 #include "server_ServerSocket.h"
 #include "common_funciones.h"
+#include "Protocolo.h"
 #include <string>
 
 class Servidor {
@@ -12,7 +13,7 @@ class Servidor {
         Servidor();
         virtual ~Servidor();
 
-        int abrir(t_puerto puerto);  
+        int abrir(t_puerto puerto);
         void cerrar();
 
         static void* aceptar(void* v_puerto);
@@ -27,8 +28,9 @@ class Servidor {
         std::vector<ServerSocket*> puertos;
         static pthread_mutex_t log_mutex;
         static void loguear(const std::string& mensaje);
-        static void* salir(void*arg); 
+        static void* salir(void*arg);
         static void apagar(std::vector<ServerSocket*> &puertos);
+        static Protocolo protocolo;
 };
 
 #endif // SERVIDOR_H

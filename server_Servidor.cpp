@@ -81,7 +81,7 @@ void* Servidor::aceptar(void* po_socket){
       mensaje_confirmacion.str("");
       mensaje_confirmacion << "PUERTO " << posocket->getPuerto() \
                            << " Aceptado. Recibiendo datos...";
-      tamanio_confirmacion=serializarMsg(mensaje_confirmacion.str().c_str(),\
+      tamanio_confirmacion=protocolo.serializarMsg(mensaje_confirmacion.str().c_str(),\
                    mensaje_confirmacion.str().length(),&confirmacion_serial);
       posocket->enviar(confirmacion_serial,tamanio_confirmacion);
       delete[] confirmacion_serial;
@@ -90,7 +90,7 @@ void* Servidor::aceptar(void* po_socket){
            (bytes_datos_recibidos=posocket->recibir(&buffer_entrada))<=0){
        DEBUG_MSG("Error recibiendo mensaje del cliente.");
       } else {
-       tamanio= deserializarMsg(buffer_entrada, &mensaje_cliente);
+       tamanio= protocolo.deserializarMsg(buffer_entrada, &mensaje_cliente);
        if (MODO_DEBUG==1){
            msgAString(mensaje_cliente,tamanio,mensaje);
            Servidor::loguear(mensaje);
@@ -105,7 +105,7 @@ void* Servidor::aceptar(void* po_socket){
        mensaje_confirmacion \
        << "Datos recibidos exitosamente. Cantidad de bytes recibidos: " \
        << tamanio << ".";
-       tamanio_confirmacion=serializarMsg(mensaje_confirmacion.str().c_str(), \
+       tamanio_confirmacion=protocolo.serializarMsg(mensaje_confirmacion.str().c_str(), \
                                           mensaje_confirmacion.str().length(),\
                                           &confirmacion_serial);
        posocket->enviar(confirmacion_serial,tamanio_confirmacion);

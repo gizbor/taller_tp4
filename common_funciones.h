@@ -20,7 +20,7 @@ uint32_t deserializarMsg(const char* serial_msg, char** des_msg);
 *    POS: el mensaje original no se modifica.
 *    Retorno: puntero a mensaje serializado.
 */
- uint32_t serializarMsg(const char* msg, uint32_t tamanio, char** serial_msg);
+uint32_t serializarMsg(const char* msg, uint32_t tamanio, char** serial_msg);
 
 void imprimirMsg(const char* des_msg, uint32_t tamanio);
 

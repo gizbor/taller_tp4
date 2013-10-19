@@ -53,6 +53,7 @@ return socketd;
 }
 
 int Socket::enviar(char* mensaje, uint32_t tamanio){
+    int error=-1;
     if (estaConectado()){
         DEBUG_MSG("Enviando mensaje...");
         ssize_t bytes_enviados;
@@ -60,12 +61,10 @@ int Socket::enviar(char* mensaje, uint32_t tamanio){
         memcpy(paquete,mensaje,tamanio);
 
         bytes_enviados = send(this->getSocket(), paquete, TAMANIO_PAQUETE, 0);
-        if (bytes_enviados==-1)
-            return -1;
-    } else {
-        return -1;
+        if (bytes_enviados!=-1)
+            return error=0;
     }
-return 0;
+return error;
 }
 
 // cant. recibida o -1 en caso de error
