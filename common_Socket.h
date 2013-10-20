@@ -1,7 +1,8 @@
 #ifndef COMMON_SOCKET_H_INCLUDED
 #define COMMON_SOCKET_H_INCLUDED
 #include "common_General.h"
-class Socket
+#include "common_Thread.h"
+class Socket: public Thread
 {
     public:
         Socket();
@@ -17,6 +18,7 @@ class Socket
         virtual int recibir(char** buffer);
         virtual int enviar(char* mensaje, uint32_t tamanio);
         virtual int conectar() = 0;
+        virtual void* run() = 0;
 
         void cerrar();
         void apagar();

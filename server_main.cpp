@@ -1,18 +1,18 @@
 #include "server_Servidor.h"
 #include <pthread.h>
 #include <string>
-
+#include "server_ApagaServidor.h"
 
 int main(int argc, char** argv){
-    int error=0;
+    int error=-1;
     Servidor servidor;
-    std::string puertos;
-    if (argc == 2){
-        puertos=argv[1];
+    ApagaServidor apagador(&servidor);
+
+    servidor.setApagador(&apagador);
+
+    if (argc == 2)
         error=servidor.iniciar(argv[1]);
-    } else {
-        error=-1;
-    }
+
 
 return error;
 }

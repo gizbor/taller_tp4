@@ -3,6 +3,7 @@
 #include <vector>
 
 Servidor::Servidor(){
+   apagador=NULL;
 }
 
 Servidor::~Servidor(){
@@ -15,7 +16,7 @@ pthread_mutex_t Servidor::log_mutex = PTHREAD_MUTEX_INITIALIZER;
 int Servidor::abrir(t_puerto puerto){
     std::stringstream mensaje;
 
-    ServerSocket* socket=new ServerSocket();
+    ServerSocket* socket=new ServerSocket(this);
     socket->setPuerto(puerto);
     if (socket->conectar()==0){
         puertos.push_back(socket);
@@ -33,14 +34,6 @@ return 0;
 
 bool Servidor::estaAbierto(t_puerto puerto){
 return this->getSocket(puerto)!=NULL;
-}
-
-pthread_t Servidor::escuchar(t_puerto puerto){
-    pthread_t hilo;
-    ServerSocket* socket=getSocket(puerto);
-    pthread_create(&hilo, NULL, &Servidor::aceptar, \
-                    reinterpret_cast<void*>(socket));
-return hilo;
 }
 
 ServerSocket* Servidor::getSocket(t_puerto puerto){
@@ -85,7 +78,7 @@ int Servidor::recibirArchivo(ServerSocket& socket, char** buffer_entrada){
               } else {
                tamanio= protocolo.deserializarMsg(*buffer_entrada, &mensaje_cliente);
                if (MODO_DEBUG==1){
-                   msgAString(mensaje_cliente,tamanio,mensaje);
+                   protocolo.msgAString(mensaje_cliente,tamanio,mensaje);
                    Servidor::loguear(mensaje);
                }
                delete[] mensaje_cliente;
@@ -110,39 +103,33 @@ int Servidor::enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio){
 return error;
 }
 /* PRE: puerto abierto */
-void* Servidor::aceptar(void* po_socket){
+int Servidor::atender(Socket& socketp){
  std::stringstream mensaje_log;
- ServerSocket* posocket=reinterpret_cast<ServerSocket*>(po_socket);
+ServerSocket& socket=*((ServerSocket*)&socketp);
  char *buffer_entrada=NULL;
- bool shutdown=false;
+ int error=1;
  uint32_t tamanio;
  std::string mensaje;
 
- while (!shutdown){
-      if (posocket->aceptar()==0){
           mensaje_log.str("");
-          mensaje_log << "PUERTO " << posocket->getPuerto() << \
+          mensaje_log << "PUERTO " << socket.getPuerto() << \
                        ". Conexión aceptada.";
-          Servidor::loguear(mensaje_log.str());
-          if (Servidor::confirmarConexion(*posocket)!=0){
-            if ((tamanio=Servidor::recibirArchivo(*posocket, &buffer_entrada))!=-1){
+          this->loguear(mensaje_log.str());
+          if (this->confirmarConexion(socket)!=0){
+            if ((tamanio=this->recibirArchivo(socket, &buffer_entrada))!=-1){
                    mensaje_log.str("");
-                   mensaje_log << "PUERTO "    << posocket->getPuerto() \
+                   mensaje_log << "PUERTO "    << socket.getPuerto() \
                                        << ". Recibidos " << tamanio << " bytes.";
-                   Servidor::loguear(mensaje_log.str());
-                   Servidor::enviarConfirmacionArchivo(*posocket, tamanio);
+                   this->loguear(mensaje_log.str());
+                   this->enviarConfirmacionArchivo(socket, tamanio);
                    delete[] buffer_entrada;
+                   error=0;
             }
              mensaje_log.str("");
-             mensaje_log << "PUERTO " << posocket->getPuerto() << ". Conexión cerrada.";
-             Servidor::loguear(mensaje_log.str());
+             mensaje_log << "PUERTO " << socket.getPuerto() << ". Conexión cerrada.";
+             this->loguear(mensaje_log.str());
           }
-        posocket->cancelar();
-       } else {
-           shutdown = true;
-       }
-  }
-pthread_exit(NULL);
+return error;
 }
 
 void Servidor::loguear(const std::string& mensaje){
@@ -151,28 +138,14 @@ void Servidor::loguear(const std::string& mensaje){
  pthread_mutex_unlock(&(Servidor::log_mutex));
 }
 
-/** Descripcion: lanza un thread que escucha la tecla 'q'. Al
-    ser presionada procede a ejecutar shutdown de todos los puertos */
-pthread_t Servidor::apagador(){
-  pthread_t hilo;
-  pthread_create(&hilo,NULL,&Servidor::salir,&puertos);
-return hilo;
-}
-
-void* Servidor::salir(void* p_puertos){
-  std::vector<ServerSocket*> &puertos= \
-    *static_cast<std::vector<ServerSocket*> *> (p_puertos);
-  DEBUG_MSG("Presione 'q' para salir...");
-  char c;
-  while (std::cin >> c && c!='q'){}
-  Servidor::apagar(puertos);
-  pthread_exit(NULL);
-}
-
-void Servidor::apagar(std::vector<ServerSocket*> &puertos){
+void Servidor::apagar(){
   DEBUG_MSG("Apagando servidor\n");
-  for (unsigned int i=0; i<puertos.size(); i++)
+  for (unsigned int i=0; i<puertos.size(); i++){
       puertos[i]->apagar();
+      if (puertos[i]->isFinished())
+        puertos[i]->exit();
+  }
+    ((Thread*)apagador)->exit();
 }
 
 
@@ -191,42 +164,35 @@ void Servidor::parsearPuertos(const char* puertos, std::vector<t_puerto> &vpuert
     }
 }
 
-int Servidor::iniciar(std::string puertos){
-        std::vector<int> threads;
+int Servidor::iniciar(std::string lista_puertos){
+        std::vector<Thread*> threads;
         int error= 0;
-        pthread_t hilo;
         std::vector<t_puerto> vpuertos;
-        parsearPuertos(puertos.c_str(), vpuertos);
-
+        parsearPuertos(lista_puertos.c_str(), vpuertos);
         std::vector<t_puerto>::iterator itp;
         itp = vpuertos.begin();
+        std::vector<ServerSocket*>::iterator itPuertos;
 
         /* Intento abrir puertos */
         while (itp != vpuertos.end()) {
-            if (this->abrir(*itp)!=0)
-                if (!this->estaAbierto(*itp))
-                    error++;
-        itp++;
+                if (this->abrir(*itp)!=0)
+                    if (!this->estaAbierto(*itp))
+                        error++;
+            itp++;
         }
         /* Escucha puertos que pudieton abrirse */
         if (error < (int)vpuertos.size()){
-            for (itp=vpuertos.begin(); itp!=vpuertos.end(); ++itp){
-                    if (this->estaAbierto(*itp)){
-                        hilo=this->escuchar(*itp);
-                        threads.push_back(hilo);
-                    }
+            threads.push_back((Thread*)apagador);
+            ((Thread*)apagador)->start();
+            for (itPuertos=puertos.begin();itPuertos!=puertos.end();++itPuertos){
+                (*itPuertos)->start();
+                threads.push_back((*itPuertos));
             }
-            /* Espera caracter 'q' para salir */
-            hilo=this->apagador();
-            threads.push_back(hilo);
 
             for (int i_thread=0; i_thread<(int)threads.size(); i_thread++){
-                pthread_join(threads[i_thread],NULL);
+                threads[i_thread]->join();
             }
         }
-        this->cerrar();
 return error;
 }
-
-
 

@@ -1,8 +1,9 @@
 #include "server_ServerSocket.h"
 #include <string>
 
-ServerSocket::ServerSocket(){
+ServerSocket::ServerSocket(Listener* listener){
     setSocketPuerto(PUERTO_NO_ABIERTO);
+    setListener(listener);
 }
 
 ServerSocket::~ServerSocket(){
@@ -47,21 +48,29 @@ void ServerSocket::cancelar(){
  }
 }
 
-/*PRE: puerto abierto */
-int ServerSocket::aceptar(){
-  int error=-1, new_sd;
+/*PRE: puerto abierto: -1 error, 0 OK */
+void* ServerSocket::run(){
+  int  new_sd;
   struct sockaddr_storage their_addr;
+  bool shutdown=false;
+  int error=-1;
   socklen_t addr_size = sizeof(their_addr);
   if (this->getSocketPuerto()!=PUERTO_NO_ABIERTO){
-      new_sd = accept(getSocketPuerto(), (struct sockaddr *)&their_addr, &addr_size);
-      if (new_sd == -1){
-         DEBUG_MSG("Error en el aceptar.");
-      } else {
-            setSocket(new_sd);
-            error=0;
+      while(!shutdown){
+              new_sd = accept(getSocketPuerto(), (struct sockaddr *)&their_addr, &addr_size);
+              if (new_sd == -1){
+                 DEBUG_MSG("Error en el aceptar.");
+                 shutdown=true;
+              } else {
+                    setSocket(new_sd);
+                    this->listener->atender(*this);
+                    this->cancelar();
+              }
+              error=0;
       }
   }
-return error;
+  this->kill();
+return (void*)error;
 }
 
 void ServerSocket::apagar(){

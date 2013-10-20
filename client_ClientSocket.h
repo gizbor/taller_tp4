@@ -11,6 +11,7 @@ class ClientSocket: public Socket
       virtual ~ClientSocket();
       int conectar();
       std::string aString();
+      void* run(){ return 0; }
   protected:
   private:
 

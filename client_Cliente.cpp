@@ -26,7 +26,7 @@ int Cliente::enviar(const char* msg, uint32_t tamanio){
     tamanio_msg= protocolo.serializarMsg(msg, tamanio, &serial_msg);
 
     if (!osocket.estaConectado() || \
-        this->osocket.enviar(serial_msg, tamanio_msg)!=0){
+        this->osocket.enviar(serial_msg, tamanio_msg)<=0){
         DEBUG_MSG("Error enviando.");
         error=1;
     }

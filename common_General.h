@@ -7,6 +7,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <stdlib.h>
+#include <vector>
 #include <sstream>
 #include <cstring>      // Needed for memset
 #include <sys/socket.h> // Needed for the socket functions
@@ -16,10 +17,10 @@ typedef unsigned int t_puerto; /* TODO: mover esto a common */
 #define TAMANIO_PAQUETE 3072
 
 /* Comentar siguiente linea para no mostrar mensajes de debug */
-#define __DEBUG__
+//#define __DEBUG__
 #ifdef __DEBUG__
 #define DEBUG_MSG(mensaje) printf("[DEBUG] %s\n", mensaje)
-#define MODO_DEBUG 1
+#define MODO_DEBUG 0
 #else
 #define DEBUG_MSG(mensaje) printf("%s", "")
 #define MODO_DEBUG 0
