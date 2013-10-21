@@ -9,10 +9,10 @@
 #include <stdlib.h>
 #include <vector>
 #include <sstream>
-#include <cstring>      // Needed for memset
-#include <sys/socket.h> // Needed for the socket functions
-#include <netdb.h>      // Needed for the socket functions
-typedef unsigned int t_puerto; /* TODO: mover esto a common */
+#include <cstring>
+#include <sys/socket.h>
+#include <netdb.h>
+typedef unsigned int t_puerto;
 
 #define TAMANIO_PAQUETE 3072
 

@@ -61,31 +61,36 @@ int Servidor::confirmarConexion(ServerSocket& socket){
       mensaje_confirmacion.str("");
       mensaje_confirmacion << "PUERTO " << socket.getPuerto() \
                            << " Aceptado. Recibiendo datos...";
-      tamanio_confirmacion=protocolo.serializarMsg(mensaje_confirmacion.str().c_str(),\
-                   mensaje_confirmacion.str().length(),&confirmacion_serial);
+
+      tamanio_confirmacion=protocolo.serializarMsg(
+                   mensaje_confirmacion.str().c_str(),\
+                   mensaje_confirmacion.str().length(),\
+                   &confirmacion_serial);
+
       error=socket.enviar(confirmacion_serial,tamanio_confirmacion);
       delete[] confirmacion_serial;
 return error;
 }
 
-// -1: error, bytes recibidos
 int Servidor::recibirArchivo(ServerSocket& socket, char** buffer_entrada){
     int tamanio=-1;
     char *mensaje_cliente=NULL;
     std::string mensaje;
-              if (socket.recibir(buffer_entrada)<=0){
-                    DEBUG_MSG("Error recibiendo archivo del cliente.");
-              } else {
-               tamanio= protocolo.deserializarMsg(*buffer_entrada, &mensaje_cliente);
-               if (MODO_DEBUG==1){
-                   protocolo.msgAString(mensaje_cliente,tamanio,mensaje);
-                   Servidor::loguear(mensaje);
-               }
-               delete[] mensaje_cliente;
-              }
+    if (socket.recibir(buffer_entrada)<=0){
+          DEBUG_MSG("Error recibiendo archivo del cliente.");
+    } else {
+     tamanio= protocolo.deserializarMsg(*buffer_entrada, &mensaje_cliente);
+     if (MODO_DEBUG==1){
+         protocolo.msgAString(mensaje_cliente,tamanio,mensaje);
+         Servidor::loguear(mensaje);
+     }
+     delete[] mensaje_cliente;
+    }
 return tamanio;
 }
-int Servidor::enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio){
+
+int Servidor::enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio)
+{
    std::stringstream mensaje_confirmacion;
    char *confirmacion_serial=NULL;
    uint32_t tamanio_confirmacion;
@@ -95,20 +100,20 @@ int Servidor::enviarConfirmacionArchivo(ServerSocket& socket, uint32_t tamanio){
       << "Datos recibidos exitosamente. Cantidad de bytes recibidos: " \
       << tamanio << ".";
      tamanio_confirmacion=protocolo.serializarMsg(\
-                                            mensaje_confirmacion.str().c_str(), \
-                                            mensaje_confirmacion.str().length(),\
-                                            &confirmacion_serial);
+                                   mensaje_confirmacion.str().c_str(), \
+                                   mensaje_confirmacion.str().length(),\
+                                   &confirmacion_serial);
      error=socket.enviar(confirmacion_serial,tamanio_confirmacion);
      delete[] confirmacion_serial;
 return error;
 }
-/* PRE: puerto abierto */
+
 int Servidor::atender(Socket& socketp){
  std::stringstream mensaje_log;
 ServerSocket& socket=*((ServerSocket*)&socketp);
  char *buffer_entrada=NULL;
  int error=1;
- uint32_t tamanio;
+ int tamanio;
  std::string mensaje;
 
           mensaje_log.str("");
@@ -119,14 +124,15 @@ ServerSocket& socket=*((ServerSocket*)&socketp);
             if ((tamanio=this->recibirArchivo(socket, &buffer_entrada))!=-1){
                    mensaje_log.str("");
                    mensaje_log << "PUERTO "    << socket.getPuerto() \
-                                       << ". Recibidos " << tamanio << " bytes.";
+                               << ". Recibidos " << tamanio << " bytes.";
                    this->loguear(mensaje_log.str());
-                   this->enviarConfirmacionArchivo(socket, tamanio);
+                   this->enviarConfirmacionArchivo(socket, (uint32_t)tamanio);
                    delete[] buffer_entrada;
                    error=0;
             }
              mensaje_log.str("");
-             mensaje_log << "PUERTO " << socket.getPuerto() << ". Conexión cerrada.";
+             mensaje_log << "PUERTO " << socket.getPuerto() \
+                         << ". Conexión cerrada.";
              this->loguear(mensaje_log.str());
           }
 return error;
@@ -149,7 +155,8 @@ void Servidor::apagar(){
 }
 
 
-void Servidor::parsearPuertos(const char* puertos, std::vector<t_puerto> &vpuertos){
+void Servidor::parsearPuertos(const char* puertos, \
+                                std::vector<t_puerto> &vpuertos){
     std::stringstream s;
     t_puerto p;
     char c=*(puertos++);
@@ -165,34 +172,32 @@ void Servidor::parsearPuertos(const char* puertos, std::vector<t_puerto> &vpuert
 }
 
 int Servidor::iniciar(std::string lista_puertos){
-        std::vector<Thread*> threads;
-        int error= 0;
-        std::vector<t_puerto> vpuertos;
-        parsearPuertos(lista_puertos.c_str(), vpuertos);
-        std::vector<t_puerto>::iterator itp;
-        itp = vpuertos.begin();
-        std::vector<ServerSocket*>::iterator itPuertos;
-
-        /* Intento abrir puertos */
-        while (itp != vpuertos.end()) {
-                if (this->abrir(*itp)!=0)
-                    if (!this->estaAbierto(*itp))
-                        error++;
-            itp++;
-        }
-        /* Escucha puertos que pudieton abrirse */
-        if (error < (int)vpuertos.size()){
-            threads.push_back((Thread*)apagador);
-            ((Thread*)apagador)->start();
-            for (itPuertos=puertos.begin();itPuertos!=puertos.end();++itPuertos){
-                (*itPuertos)->start();
-                threads.push_back((*itPuertos));
-            }
-
-            for (int i_thread=0; i_thread<(int)threads.size(); i_thread++){
-                threads[i_thread]->join();
-            }
-        }
+   std::vector<Thread*> threads;
+   int error= 0;
+   std::vector<t_puerto> vpuertos;
+   parsearPuertos(lista_puertos.c_str(), vpuertos);
+   std::vector<t_puerto>::iterator itp;
+   itp = vpuertos.begin();
+   std::vector<ServerSocket*>::iterator itPuertos;
+   /* Intento abrir puertos */
+   while (itp != vpuertos.end()) {
+    if (this->abrir(*itp)!=0)
+        if (!this->estaAbierto(*itp))
+            error++;
+    itp++;
+   }
+   /* Escucha puertos que pudieton abrirse */
+   if (error < (int)vpuertos.size()){
+     threads.push_back((Thread*)apagador);
+     ((Thread*)apagador)->start();
+     for (itPuertos=puertos.begin(); itPuertos!=puertos.end(); ++itPuertos){
+         (*itPuertos)->start();
+         threads.push_back((*itPuertos));
+     }
+     for (int i_thread=0; i_thread<(int)threads.size(); i_thread++){
+         threads[i_thread]->join();
+     }
+   }
 return error;
 }
 

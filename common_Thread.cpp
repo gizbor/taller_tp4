@@ -8,7 +8,6 @@ Thread::Thread(){
 Thread::~Thread(){
     if (isRunning())
         this->exit();
-
 }
 
 int Thread::detach(){
@@ -30,7 +29,6 @@ bool Thread::isFinished(){
     return this->status==THREAD_FINALIZADO;
 }
 
-// 1: ya estaba ejecutado, 0: ejecutando
 int Thread::start(){
     int result=1;
     if (!isRunning()){

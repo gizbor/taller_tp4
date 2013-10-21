@@ -1,7 +1,10 @@
 #include "client_Cliente.h"
 #include <string>
 
-Cliente::Cliente(std::string direccion,t_puerto puerto){
+Cliente::Cliente(std::string dir_puerto){
+    std::string direccion;
+    t_puerto puerto;
+    getDireccionYPuerto((char*)dir_puerto.c_str(),direccion,puerto);
     osocket.setDireccion(direccion);
     osocket.setPuerto(puerto);
 }
@@ -63,13 +66,14 @@ int Cliente::transmitirArchivo(std::ifstream& archivo){
             delete[] mensaje_recibido;
             /* Enviar mensaje */
             std::cout << "[CLIENTE] Enviando datos..." << std::endl;
-            while(!archivo.eof() && archivo.get(c))
+            while (!archivo.eof() && archivo.get(c))
                  mensaje_envio.push_back(c);
 
             if (this->enviar(mensaje_envio.c_str(),mensaje_envio.length())==0){
                   /* Recibir mensaje de recepcion del servidor */
                   if (this->recibir(&mensaje_recibido,tamanio_recv)==0){
-                    if (protocolo.validarMensajeRecepcion(mensaje_recibido, tamanio_recv, (uint32_t)mensaje_envio.length())==0){
+                    if (protocolo.validarMensajeRecepcion(mensaje_recibido, \
+                        tamanio_recv, (uint32_t)mensaje_envio.length())==0){
                        std::cout << "[SERVIDOR] ";
                        Protocolo::imprimirMsg(mensaje_recibido,tamanio_recv);
                        error=0;
@@ -82,3 +86,17 @@ int Cliente::transmitirArchivo(std::ifstream& archivo){
       }
 return error;
 }
+
+void Cliente::getDireccionYPuerto(char const * dir_puerto, \
+                                               std::string& direccion,\
+                                               t_puerto& puerto){
+    std::stringstream puerto_str;
+    char c;
+    while ((c=*(dir_puerto++)) && c!=':')
+       direccion.push_back(c);
+    while ((c=*(dir_puerto++)) && c!='\0')
+       puerto_str << c;
+       puerto_str >> puerto;
+}
+
+

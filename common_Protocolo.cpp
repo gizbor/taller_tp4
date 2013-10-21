@@ -1,14 +1,8 @@
 #include "common_Protocolo.h"
+#include <string>
 
-Protocolo::Protocolo() {
-    //ctor
-}
-
-Protocolo::~Protocolo() {
-    //dtor
-}
-
-void Protocolo::msgAString(const char* des_msg, uint32_t tamanio, std::string& des_str) {
+void Protocolo::msgAString(const char* des_msg, uint32_t tamanio, \
+                                                    std::string& des_str) {
     des_str.assign(des_msg, (size_t)tamanio);
     des_str.append(1,'\0');
 }
@@ -18,7 +12,8 @@ void Protocolo::imprimirMsg(const char* des_msg, uint32_t tamanio) {
     std::cout << std::endl;
 }
 
-uint32_t Protocolo::serializarMsg(const char* msg, uint32_t tamanio, char** serial_msg) {
+uint32_t Protocolo::serializarMsg(const char* msg, uint32_t tamanio, \
+                                                          char** serial_msg) {
     uint32_t long_msg=htonl(tamanio);
     uint32_t long_total=tamanio+sizeof(uint32_t);
     *serial_msg= new char[long_total];
@@ -37,7 +32,7 @@ uint32_t Protocolo::deserializarMsg(const char* serial_msg, char** des_msg) {
 }
 
 int Protocolo::validarMensajeRecepcion(const char* mensaje_recibido, \
-                                                    uint32_t tamanio_recv, uint32_t tamanio_envio){
+                                uint32_t tamanio_recv, uint32_t tamanio_envio){
   std::stringstream s_esperado;
   std::string s_recibido;
   s_esperado <<  "Datos recibidos exitosamente. Cantidad de bytes recibidos: "

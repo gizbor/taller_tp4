@@ -6,13 +6,12 @@ Socket::Socket(){
     setPuerto(PUERTO_NO_ABIERTO);
     setDireccion("");
     host_info_list= NULL;
-    memset(&host_info, 0, sizeof host_info); // Necesario
+    memset(&host_info, 0, sizeof host_info);
 }
 
 Socket::~Socket(){
     freeaddrinfo(host_info_list);
 }
-
 
 int Socket::setAddrInfo(){
     int status;
@@ -37,7 +36,6 @@ int Socket::setAddrInfo(){
 return error;
 }
 
-// -1 si hubo error o el socket
 int Socket::getSocketDescriptor(){
         int socketd=0;
         if (host_info_list!=NULL){ // Si fueron seteados las estructuras
@@ -67,7 +65,6 @@ int Socket::enviar(char* mensaje, uint32_t tamanio){
 return error;
 }
 
-// cant. recibida o -1 en caso de error
 int Socket::recibir(char** buffer_entrada){
     ssize_t bytes_recibidos;
     int error=-1;
@@ -77,7 +74,6 @@ int Socket::recibir(char** buffer_entrada){
             *buffer_entrada,TAMANIO_PAQUETE, 0);
     if (bytes_recibidos == 0) {
       DEBUG_MSG("Servidor apagado.");
-    //  error= 0;
     } else {
       if (bytes_recibidos == -1){
         DEBUG_MSG("Error de recepcion.");

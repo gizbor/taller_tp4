@@ -1,21 +1,22 @@
 #include "client_Cliente.h"
-#include "common_funciones.h"
 #include "common_Protocolo.h"
 #include <fstream>
 #include <string>
 
-void parsearParametros(char const * dir_puerto, std::string& direccion,\
-                                t_puerto& puerto);
+/************ 75.42 - TALLER DE PROGRAMACION I: Cátedra Veiga **************
+*    TRABAJO PRACTICO 4: "Open Port Toolkit"
+*    Nro. de entrega/Fecha: 2/20-10-2013 de Septiembre
+*    Alumno: Gustavo Martín Borello
+*    Padrón: 90670
+*    Año/Cuatrimestre: 2013/2
+******************************************************************************/
 
 int main(int argc, char** argv){
-  std::string direccion;
-  t_puerto puerto;
   std::ifstream* parchivo;
   int error=-1;
 
   if (argc >= 2){
-      parsearParametros(argv[1],direccion,puerto);
-      Cliente cliente(direccion,puerto);
+      Cliente cliente(argv[1]);
 
      if (argc == 3){
         parchivo=new std::ifstream();
@@ -31,18 +32,3 @@ int main(int argc, char** argv){
     }
 return error;
 }
-
-
-void parsearParametros(char const * dir_puerto, std::string& direccion,\
-                          t_puerto& puerto){
-    std::stringstream puerto_str;
-    char c;
-    while ((c=*(dir_puerto++)) && c!=':')
-       direccion.push_back(c);
-    while ((c=*(dir_puerto++)) && c!='\0')
-       puerto_str << c;
-       puerto_str >> puerto;
-}
-
-
-

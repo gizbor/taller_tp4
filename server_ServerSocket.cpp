@@ -48,7 +48,6 @@ void ServerSocket::cancelar(){
  }
 }
 
-/*PRE: puerto abierto: -1 error, 0 OK */
 void* ServerSocket::run(){
   int  new_sd;
   struct sockaddr_storage their_addr;
@@ -56,18 +55,20 @@ void* ServerSocket::run(){
   int error=-1;
   socklen_t addr_size = sizeof(their_addr);
   if (this->getSocketPuerto()!=PUERTO_NO_ABIERTO){
-      while(!shutdown){
-              new_sd = accept(getSocketPuerto(), (struct sockaddr *)&their_addr, &addr_size);
-              if (new_sd == -1){
-                 DEBUG_MSG("Error en el aceptar.");
-                 shutdown=true;
-              } else {
-                    setSocket(new_sd);
-                    this->listener->atender(*this);
-                    this->cancelar();
-              }
-              error=0;
+    while (!shutdown){
+      new_sd = accept(getSocketPuerto(), \
+                     (struct sockaddr *)&their_addr, \
+                      &addr_size);
+      if (new_sd == -1){
+         DEBUG_MSG("Error en el aceptar.");
+         shutdown=true;
+      } else {
+            setSocket(new_sd);
+            this->listener->atender(*this);
+            this->cancelar();
       }
+      error=0;
+    }
   }
   this->kill();
 return (void*)error;
@@ -82,5 +83,3 @@ std::string ServerSocket::aString(){
     s << "Puerto: " << getPuerto() << ", Socket Server: " << getSocketPuerto();
 return s.str();
 }
-
-

@@ -10,6 +10,8 @@ class Thread
     public:
         Thread();
         virtual ~Thread();
+        /** Metodos estandar de pthread encapsulados.
+        */
         int start();
         int join();
         int detach();
@@ -18,6 +20,11 @@ class Thread
         bool isFinished();
         void kill();
         void setStatus(int status) { this->status=status; }
+
+        /** Descripcion: metodo virtual puro que seta ejecutado por
+        *   el hilo.
+        *   Retorno: void*
+        */
         virtual void* run() = 0;
         static void* runThread(void* arg);
 

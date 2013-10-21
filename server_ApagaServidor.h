@@ -6,9 +6,13 @@
 class ApagaServidor: public Thread
 {
     public:
-        ApagaServidor(Servidor* servidor);
+        explicit ApagaServidor(Servidor* servidor);
         virtual ~ApagaServidor();
         void setServidor(Servidor* servidor) { this->servidor=servidor; }
+        /** Descripcion: escucha teclado y ejecuta el metodo "apagar" del 
+        *	servidor al presionar "q".
+        *   Retorno: -
+        */
         void* run();
     protected:
     private:

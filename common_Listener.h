@@ -5,8 +5,12 @@
 class Listener
 {
     public:
-        Listener() {};
-        virtual ~Listener() {};
+        Listener() {}
+        virtual ~Listener() {}
+        /** Descripcion: despacha al objeto Listener el puerto aceptado 
+          * para comunicarse mediante el mismo.
+          * Retorno: 0 -> proceso terminado con exito, 1-> hubo un error
+          */
         virtual int atender(Socket& socket) = 0;
     protected:
     private:

@@ -10,11 +10,10 @@ ClientSocket::~ClientSocket(){
 std::string ClientSocket::aString(){
     std::stringstream s;
     s << "Puerto: " << getPuerto() << ", Direccion " << \
-         getDireccion() <<", Socket: " << getSocket() ;
+         getDireccion() <<", Socket: " << getSocket();
 return s.str();
 }
 
-// 1: error, 0: no error
 int ClientSocket::conectar(){
     int estado;
     int error=1;
